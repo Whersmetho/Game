@@ -1,0 +1,2602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Una Carta de Amor Jugable 💛</title>
+  <style>
+    /* =====================================================
+       ESTILOS GLOBALES - Paleta emocional y romántica
+    ===================================================== */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1a0a00;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Lato', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Pantalla de inicio */
+    #pantalla-inicio {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 60%, #3d1a00 0%, #0d0500 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      gap: 24px;
+      transition: opacity 1.2s ease;
+    }
+
+    #pantalla-inicio h1 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(28px, 5vw, 52px);
+      color: #f5d88a;
+      text-align: center;
+      text-shadow: 0 0 40px rgba(245,216,138,0.5);
+      letter-spacing: 2px;
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      from { text-shadow: 0 0 20px rgba(245,216,138,0.3); }
+      to   { text-shadow: 0 0 60px rgba(245,216,138,0.8), 0 0 100px rgba(255,180,80,0.3); }
+    }
+
+    #pantalla-inicio p {
+      color: #c4956a;
+      font-size: 15px;
+      letter-spacing: 1px;
+      text-align: center;
+      max-width: 360px;
+      line-height: 1.8;
+      font-style: italic;
+    }
+
+    /* Botón de inicio - requiere clic del usuario para audio */
+    #btn-inicio {
+      margin-top: 16px;
+      padding: 14px 48px;
+      background: linear-gradient(135deg, #c8860a, #e8a820);
+      border: none;
+      border-radius: 50px;
+      color: #1a0a00;
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 30px rgba(200,134,10,0.5);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    #btn-inicio:hover {
+      transform: scale(1.06);
+      box-shadow: 0 6px 40px rgba(200,134,10,0.8);
+    }
+
+    /* Contenedor del canvas */
+    #game-wrapper {
+      position: relative;
+      display: none;
+    }
+
+    #gameCanvas {
+      display: block;
+      border-radius: 4px;
+      box-shadow: 0 0 80px rgba(200,134,10,0.3);
+    }
+
+    /* HUD superpuesto */
+    #hud {
+      position: absolute;
+      top: 12px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      pointer-events: none;
+    }
+
+    #hud-escena {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: rgba(245,216,138,0.85);
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+    }
+
+    #hud-recuerdos {
+      color: rgba(245,216,138,0.7);
+      font-size: 12px;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+    }
+
+    /* Panel de álbum */
+    #album-btn {
+      position: absolute;
+      bottom: 14px;
+      right: 16px;
+      background: rgba(30,12,0,0.75);
+      border: 1px solid rgba(245,216,138,0.3);
+      border-radius: 8px;
+      padding: 7px 14px;
+      color: #f5d88a;
+      font-size: 12px;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: background 0.2s;
+      pointer-events: all;
+    }
+    #album-btn:hover { background: rgba(60,24,0,0.85); }
+
+    /* Modal del álbum */
+    #album-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(10,4,0,0.92);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+    #album-modal.visible { display: flex; }
+
+    #album-modal h2 {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: #f5d88a;
+      font-size: 28px;
+      letter-spacing: 2px;
+    }
+
+    #album-galeria {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      max-width: 640px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .album-card {
+      width: 140px;
+      background: rgba(40,16,0,0.9);
+      border: 1px solid rgba(245,216,138,0.25);
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .album-card:hover { transform: scale(1.04); border-color: rgba(245,216,138,0.6); }
+    .album-card.bloqueado { opacity: 0.35; filter: grayscale(1); }
+
+    .album-card .icono { font-size: 32px; margin-bottom: 8px; }
+    .album-card .titulo {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: #f5d88a;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .album-card .desc { color: #c4956a; font-size: 10px; line-height: 1.5; }
+
+    #album-cerrar {
+      padding: 10px 36px;
+      background: linear-gradient(135deg, #c8860a, #e8a820);
+      border: none;
+      border-radius: 50px;
+      color: #1a0a00;
+      font-family: 'Playfair Display', serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Instrucción inicial */
+    #instruccion {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20,8,0,0.8);
+      border: 1px solid rgba(245,216,138,0.2);
+      border-radius: 8px;
+      padding: 10px 20px;
+      color: rgba(245,216,138,0.75);
+      font-size: 12px;
+      pointer-events: none;
+      white-space: nowrap;
+      animation: fadeInOut 4s ease forwards;
+    }
+    @keyframes fadeInOut {
+      0%   { opacity: 0; }
+      20%  { opacity: 1; }
+      75%  { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ======================== PANTALLA DE INICIO ======================== -->
+<div id="pantalla-inicio">
+  <h1>Una Carta de Amor Jugable</h1>
+  <p>Un pequeño mundo hecho de recuerdos,<br>construido solo para ti.</p>
+  <button id="btn-inicio">✨ Comenzar la aventura</button>
+</div>
+
+<!-- ======================== JUEGO PRINCIPAL ======================== -->
+<div id="game-wrapper">
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- HUD -->
+  <div id="hud">
+    <span id="hud-escena">Capítulo I</span>
+    <span id="hud-recuerdos">💛 0 recuerdos</span>
+  </div>
+
+  <!-- Botón álbum -->
+  <button id="album-btn">📖 Álbum de recuerdos</button>
+
+  <!-- Instrucción inicial -->
+  <div id="instruccion" style="display:none;">Haz clic para moverte · Acércate a las flores amarillas</div>
+</div>
+
+<!-- ======================== MODAL ÁLBUM ======================== -->
+<div id="album-modal">
+  <h2>📖 Álbum de Recuerdos</h2>
+  <div id="album-galeria"></div>
+  <button id="album-cerrar">Cerrar</button>
+</div>
+
+<script>
+// ============================================================
+//  AMOR JUGABLE - Motor de videojuego romántico
+//  Arquitectura: OOP modular, escalable, documentado en español
+// ============================================================
+
+// ─────────────────────────────────────────
+//  CONSTANTES GLOBALES
+// ─────────────────────────────────────────
+const CANVAS_W = 800;
+const CANVAS_H = 500;
+const FPS_TARGET = 60;
+
+// ─────────────────────────────────────────
+//  UTILIDADES MATEMÁTICAS
+// ─────────────────────────────────────────
+const Util = {
+  /** Distancia entre dos puntos */
+  dist(ax, ay, bx, by) {
+    return Math.hypot(bx - ax, by - ay);
+  },
+  /** Interpolación lineal */
+  lerp(a, b, t) {
+    return a + (b - a) * t;
+  },
+  /** Número aleatorio en rango */
+  rand(min, max) {
+    return Math.random() * (max - min) + min;
+  },
+  /** Entero aleatorio en rango inclusivo */
+  randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  },
+  /** Limitar valor entre mínimo y máximo */
+  clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
+  }
+};
+
+// ─────────────────────────────────────────
+//  AUDIO MANAGER
+//  Gestiona música de fondo, efectos y compatibilidad con navegadores
+// ─────────────────────────────────────────
+class AudioManager {
+  constructor() {
+    this.ctx = null;          // Contexto de Web Audio API
+    this.musicGain = null;    // Nodo de volumen para música
+    this.sfxGain = null;      // Nodo de volumen para efectos
+    this.musicSource = null;  // Fuente de música actual
+    this.activo = false;      // ¿Audio inicializado?
+  }
+
+  /** Inicializa el contexto de audio (requiere gesto del usuario) */
+  inicializar() {
+    if (this.activo) return;
+    try {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      // Nodo de volumen para música
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.value = 0.22;
+      this.musicGain.connect(this.ctx.destination);
+      // Nodo de volumen para efectos
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.value = 0.55;
+      this.sfxGain.connect(this.ctx.destination);
+      this.activo = true;
+      // Inicia música de fondo generativa
+      this.iniciarMusicaFondo();
+    } catch(e) {
+      console.warn('AudioManager: no se pudo inicializar', e);
+    }
+  }
+
+  /** Genera música de fondo ambiental con osciladores */
+  iniciarMusicaFondo() {
+    if (!this.activo) return;
+    // Acorde romántico: Do mayor con séptima (C-E-G-B)
+    const notas = [261.63, 329.63, 392.00, 493.88];
+    notas.forEach((freq, i) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = 0.04;
+      // Ligero vibrato
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      lfo.frequency.value = 0.3 + i * 0.05;
+      lfoGain.gain.value = 1.5;
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+      lfo.start();
+      osc.connect(gain);
+      gain.connect(this.musicGain);
+      osc.start();
+    });
+  }
+
+  /** Reproduce un sonido de paso / movimiento */
+  sonarPaso() {
+    if (!this.activo) return;
+    this._tono(320, 0.06, 0.08, 'sine');
+  }
+
+  /** Reproduce sonido de interacción con objeto */
+  sonarInteraccion() {
+    if (!this.activo) return;
+    this._tono(523, 0.12, 0.2, 'triangle');
+    setTimeout(() => this._tono(659, 0.08, 0.15, 'sine'), 80);
+  }
+
+  /** Reproduce sonido de respuesta correcta */
+  sonarAcierto() {
+    if (!this.activo) return;
+    [523, 659, 784, 1047].forEach((f, i) => {
+      setTimeout(() => this._tono(f, 0.1, 0.25, 'sine'), i * 80);
+    });
+  }
+
+  /** Reproduce sonido de respuesta incorrecta */
+  sonarError() {
+    if (!this.activo) return;
+    this._tono(220, 0.1, 0.3, 'sawtooth');
+  }
+
+  /** Reproduce fanfarria de victoria */
+  sonarVictoria() {
+    if (!this.activo) return;
+    [523, 659, 784, 1047, 1319].forEach((f, i) => {
+      setTimeout(() => this._tono(f, 0.12, 0.4, 'sine'), i * 100);
+    });
+  }
+
+  /** Genera un tono simple con parámetros dados */
+  _tono(frecuencia, volumen, duracion, tipo) {
+    if (!this.activo) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = tipo;
+    osc.frequency.value = frecuencia;
+    gain.gain.setValueAtTime(volumen, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duracion);
+    osc.connect(gain);
+    gain.connect(this.sfxGain);
+    osc.start();
+    osc.stop(this.ctx.currentTime + duracion + 0.01);
+  }
+}
+
+// ─────────────────────────────────────────
+//  PARTICLE SYSTEM
+//  Partículas tipo corazón que flotan y desaparecen
+// ─────────────────────────────────────────
+class Particula {
+  /**
+   * @param {number} x - Posición horizontal inicial
+   * @param {number} y - Posición vertical inicial
+   * @param {string} tipo - 'corazon' | 'estrella' | 'flor'
+   */
+  constructor(x, y, tipo = 'corazon') {
+    this.x = x;
+    this.y = y;
+    this.tipo = tipo;
+    // Velocidades iniciales aleatorias
+    this.vx = Util.rand(-1.5, 1.5);
+    this.vy = Util.rand(-3, -1);
+    this.alpha = 1;
+    this.escala = Util.rand(0.6, 1.4);
+    this.rotacion = Util.rand(0, Math.PI * 2);
+    this.vRotacion = Util.rand(-0.05, 0.05);
+    this.vida = 0;
+    this.vidaMax = Util.rand(60, 120); // Frames de vida
+  }
+
+  /** Actualiza posición, rotación y transparencia */
+  actualizar() {
+    this.vida++;
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy *= 0.97; // Desaceleración vertical
+    this.vx *= 0.96;
+    this.rotacion += this.vRotacion;
+    this.alpha = 1 - (this.vida / this.vidaMax);
+  }
+
+  /** Dibuja la partícula en el canvas */
+  dibujar(ctx) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, this.alpha);
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rotacion);
+    ctx.scale(this.escala, this.escala);
+
+    if (this.tipo === 'corazon') {
+      this._dibujarCorazon(ctx);
+    } else if (this.tipo === 'estrella') {
+      this._dibujarEstrella(ctx);
+    } else if (this.tipo === 'flor') {
+      this._dibujarFlor(ctx);
+    }
+
+    ctx.restore();
+  }
+
+  _dibujarCorazon(ctx) {
+    ctx.fillStyle = '#ff6b9d';
+    ctx.beginPath();
+    ctx.moveTo(0, -6);
+    ctx.bezierCurveTo(5, -12, 14, -3, 0, 8);
+    ctx.bezierCurveTo(-14, -3, -5, -12, 0, -6);
+    ctx.fill();
+  }
+
+  _dibujarEstrella(ctx) {
+    ctx.fillStyle = '#f5d88a';
+    ctx.beginPath();
+    for (let i = 0; i < 5; i++) {
+      const ang = (i * Math.PI * 2) / 5 - Math.PI / 2;
+      const x = Math.cos(ang) * 8;
+      const y = Math.sin(ang) * 8;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      const ang2 = ang + Math.PI / 5;
+      ctx.lineTo(Math.cos(ang2) * 3.5, Math.sin(ang2) * 3.5);
+    }
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  _dibujarFlor(ctx) {
+    ctx.fillStyle = '#ffd700';
+    for (let i = 0; i < 6; i++) {
+      const ang = (i * Math.PI * 2) / 6;
+      ctx.beginPath();
+      ctx.ellipse(Math.cos(ang) * 5, Math.sin(ang) * 5, 4, 3, ang, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#ff8c00';
+    ctx.beginPath();
+    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  /** Indica si la partícula ha terminado su ciclo de vida */
+  estaMuerta() {
+    return this.vida >= this.vidaMax;
+  }
+}
+
+class SistemaParticulas {
+  constructor() {
+    this.particulas = [];
+  }
+
+  /**
+   * Emite una explosión de partículas en una posición
+   * @param {number} x - Posición X
+   * @param {number} y - Posición Y
+   * @param {number} cantidad - Número de partículas
+   * @param {string} tipo - Tipo de partícula
+   */
+  emitir(x, y, cantidad = 12, tipo = 'corazon') {
+    for (let i = 0; i < cantidad; i++) {
+      this.particulas.push(new Particula(x, y, tipo));
+    }
+  }
+
+  /** Actualiza y limpia partículas muertas */
+  actualizar() {
+    this.particulas = this.particulas.filter(p => {
+      p.actualizar();
+      return !p.estaMuerta();
+    });
+  }
+
+  /** Dibuja todas las partículas activas */
+  dibujar(ctx) {
+    this.particulas.forEach(p => p.dibujar(ctx));
+  }
+}
+
+// ─────────────────────────────────────────
+//  GESTOR DE DIÁLOGOS
+//  Maneja mensajes narrativos y preguntas interactivas
+// ─────────────────────────────────────────
+class GestorDialogos {
+  constructor(audio, particulas, callback) {
+    this.audio = audio;
+    this.particulas = particulas;
+    this.onRespuestaCorrecta = callback; // Se llama al responder correctamente
+
+    this.activo = false;           // ¿Hay diálogo visible?
+    this.mensajes = [];            // Cola de mensajes
+    this.indiceActual = 0;         // Mensaje actual en la cola
+    this.textoMostrado = '';       // Texto animado caracter a caracter
+    this.indiceTexto = 0;          // Posición en la animación de texto
+    this.timerTexto = 0;           // Contador para velocidad de tipeo
+    this.velocidadTexto = 1.5;     // Frames por caracter
+
+    // Estado de pregunta interactiva
+    this.enPregunta = false;
+    this.preguntaActual = null;
+    this.inputUsuario = '';
+    this.feedbackMsg = '';
+    this.feedbackTimer = 0;
+    this.intentos = 0;             // Intentos en pregunta actual
+
+    // Posición y tamaño del panel de diálogo
+    this.panelX = 40;
+    this.panelY = CANVAS_H - 160;
+    this.panelW = CANVAS_W - 80;
+    this.panelH = 140;
+  }
+
+  /**
+   * Inicia una secuencia de diálogo
+   * @param {Array<string|Object>} mensajes - Lista de mensajes o preguntas
+   */
+  iniciar(mensajes) {
+    this.mensajes = mensajes;
+    this.indiceActual = 0;
+    this.activo = true;
+    this.enPregunta = false;
+    this.inputUsuario = '';
+    this.feedbackMsg = '';
+    this.intentos = 0;
+    this._cargarMensajeActual();
+  }
+
+  /** Carga el mensaje actual en la animación de tipeo */
+  _cargarMensajeActual() {
+    const msg = this.mensajes[this.indiceActual];
+    if (!msg) {
+      this.cerrar();
+      return;
+    }
+    if (typeof msg === 'object' && msg.pregunta) {
+      // Es una pregunta interactiva
+      this.enPregunta = true;
+      this.preguntaActual = msg;
+      this.textoMostrado = msg.pregunta;
+      this.indiceTexto = msg.pregunta.length; // Muestra instantáneo
+      this.inputUsuario = '';
+      this.intentos = 0;
+    } else {
+      this.enPregunta = false;
+      this.textoMostrado = '';
+      this.indiceTexto = 0;
+      this.timerTexto = 0;
+    }
+  }
+
+  /** Avanza al siguiente mensaje */
+  avanzar() {
+    if (!this.activo) return;
+    if (this.enPregunta) return; // No avanzar si hay pregunta pendiente
+
+    // Si el texto aún se está escribiendo, completarlo de golpe
+    const msg = this.mensajes[this.indiceActual];
+    const texto = typeof msg === 'string' ? msg : msg.texto || '';
+    if (this.textoMostrado.length < texto.length) {
+      this.textoMostrado = texto;
+      this.indiceTexto = texto.length;
+      return;
+    }
+
+    this.indiceActual++;
+    if (this.indiceActual >= this.mensajes.length) {
+      this.cerrar();
+    } else {
+      this._cargarMensajeActual();
+    }
+  }
+
+  /** Procesa una tecla del teclado en modo pregunta */
+  procesarTecla(e) {
+    if (!this.activo || !this.enPregunta) return;
+    if (e.key === 'Enter') {
+      this._verificarRespuesta();
+    } else if (e.key === 'Backspace') {
+      this.inputUsuario = this.inputUsuario.slice(0, -1);
+    } else if (e.key.length === 1) {
+      this.inputUsuario += e.key;
+    }
+  }
+
+  /** Verifica si la respuesta del usuario es correcta */
+  _verificarRespuesta() {
+    const q = this.preguntaActual;
+    const respNormalizada = this.inputUsuario.trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const aceptadas = q.respuestas.map(r =>
+      r.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    );
+
+    if (aceptadas.some(a => respNormalizada.includes(a) || a.includes(respNormalizada))) {
+      // ¡Correcto!
+      this.audio.sonarAcierto();
+      this.feedbackMsg = q.feedbackOk || '💛 ¡Exactamente! Lo recordé igual que tú.';
+      this.feedbackTimer = 120;
+      this.enPregunta = false;
+      this.onRespuestaCorrecta && this.onRespuestaCorrecta(q);
+      setTimeout(() => { this.avanzarTrasAcierto(); }, 1500);
+    } else {
+      // Incorrecto
+      this.intentos++;
+      this.audio.sonarError();
+      const msgs = q.feedbackError || ['Hmm... intenta recordarlo un poco más 💭'];
+      this.feedbackMsg = msgs[Math.min(this.intentos - 1, msgs.length - 1)];
+      this.feedbackTimer = 100;
+      this.inputUsuario = '';
+    }
+  }
+
+  avanzarTrasAcierto() {
+    this.indiceActual++;
+    if (this.indiceActual >= this.mensajes.length) {
+      this.cerrar();
+    } else {
+      this._cargarMensajeActual();
+    }
+  }
+
+  /** Cierra el diálogo */
+  cerrar() {
+    this.activo = false;
+    this.enPregunta = false;
+    this.mensajes = [];
+  }
+
+  /** Actualiza la animación de tipeo */
+  actualizar() {
+    if (!this.activo || this.enPregunta) return;
+
+    const msg = this.mensajes[this.indiceActual];
+    if (!msg) return;
+    const texto = typeof msg === 'string' ? msg : (msg.texto || '');
+
+    if (this.indiceTexto < texto.length) {
+      this.timerTexto += this.velocidadTexto;
+      while (this.timerTexto >= 1 && this.indiceTexto < texto.length) {
+        this.textoMostrado += texto[this.indiceTexto];
+        this.indiceTexto++;
+        this.timerTexto -= 1;
+      }
+    }
+
+    if (this.feedbackTimer > 0) this.feedbackTimer--;
+  }
+
+  /**
+   * Dibuja el panel de diálogo en el canvas
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  dibujar(ctx) {
+    if (!this.activo) return;
+
+    // Fondo del panel
+    ctx.save();
+    ctx.globalAlpha = 0.92;
+    ctx.fillStyle = '#1a0800';
+    ctx.strokeStyle = 'rgba(245,216,138,0.35)';
+    ctx.lineWidth = 1.5;
+    this._roundRect(ctx, this.panelX, this.panelY, this.panelW, this.panelH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Decoración: línea dorada superior
+    ctx.fillStyle = 'rgba(245,216,138,0.5)';
+    ctx.fillRect(this.panelX + 16, this.panelY + 1, 60, 2);
+
+    ctx.globalAlpha = 1;
+
+    // Texto del diálogo con saltos de línea automáticos
+    ctx.fillStyle = '#f0e0c0';
+    ctx.font = '14px Lato, sans-serif';
+    this._dibujarTextoEnvuelto(ctx, this.textoMostrado,
+      this.panelX + 20, this.panelY + 30,
+      this.panelW - 40, 22);
+
+    // Si es pregunta: campo de entrada
+    if (this.enPregunta) {
+      const inputY = this.panelY + 95;
+      ctx.fillStyle = 'rgba(245,216,138,0.1)';
+      ctx.strokeStyle = 'rgba(245,216,138,0.4)';
+      ctx.lineWidth = 1;
+      this._roundRect(ctx, this.panelX + 20, inputY, this.panelW - 140, 32, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#f5d88a';
+      ctx.font = '14px Lato, sans-serif';
+      ctx.fillText(this.inputUsuario + (Date.now() % 800 < 400 ? '|' : ''),
+        this.panelX + 32, inputY + 21);
+
+      // Botón Enter
+      ctx.fillStyle = 'rgba(200,134,10,0.8)';
+      this._roundRect(ctx, this.panelX + this.panelW - 110, inputY, 90, 32, 6);
+      ctx.fill();
+      ctx.fillStyle = '#1a0800';
+      ctx.font = 'bold 12px Lato, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Recordar ↵', this.panelX + this.panelW - 65, inputY + 21);
+      ctx.textAlign = 'left';
+    } else {
+      // Indicador "continuar"
+      const msg = this.mensajes[this.indiceActual];
+      const texto = typeof msg === 'string' ? msg : (msg && msg.texto) || '';
+      if (this.textoMostrado.length >= texto.length) {
+        const parpadeando = Date.now() % 900 < 600;
+        if (parpadeando) {
+          ctx.fillStyle = 'rgba(245,216,138,0.6)';
+          ctx.font = '11px Lato, sans-serif';
+          ctx.fillText('▼ Clic para continuar', this.panelX + this.panelW - 150, this.panelY + this.panelH - 14);
+        }
+      }
+    }
+
+    // Mensaje de feedback (correcto o incorrecto)
+    if (this.feedbackTimer > 0) {
+      const alpha = Math.min(1, this.feedbackTimer / 30);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = this.feedbackMsg.includes('💛') ? '#f5d88a' : '#ff9999';
+      ctx.font = 'italic 13px Lato, sans-serif';
+      ctx.fillText(this.feedbackMsg, this.panelX + 20, this.panelY + 118);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  /** Dibuja texto con saltos de línea automáticos */
+  _dibujarTextoEnvuelto(ctx, texto, x, y, maxAncho, alturaLinea) {
+    const palabras = texto.split(' ');
+    let linea = '';
+    let yActual = y;
+    const maxLineas = 3;
+    let lineasDibujadas = 0;
+
+    for (let i = 0; i < palabras.length; i++) {
+      const testLinea = linea + palabras[i] + ' ';
+      const metricas = ctx.measureText(testLinea);
+      if (metricas.width > maxAncho && linea !== '') {
+        if (lineasDibujadas < maxLineas) {
+          ctx.fillText(linea.trim(), x, yActual);
+          yActual += alturaLinea;
+          lineasDibujadas++;
+        }
+        linea = palabras[i] + ' ';
+      } else {
+        linea = testLinea;
+      }
+    }
+    if (linea && lineasDibujadas < maxLineas) {
+      ctx.fillText(linea.trim(), x, yActual);
+    }
+  }
+
+  /** Dibuja un rectángulo redondeado */
+  _roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+}
+
+// ─────────────────────────────────────────
+//  OBJETO DE RECUERDO (Flor interactiva)
+//  Representa un momento de la relación
+// ─────────────────────────────────────────
+class ObjetoRecuerdo {
+  /**
+   * @param {number} x - Posición X
+   * @param {number} y - Posición Y
+   * @param {Object} datos - Datos del recuerdo (dialogo, icono, titulo, etc.)
+   */
+  constructor(x, y, datos) {
+    this.x = x;
+    this.y = y;
+    this.datos = datos;
+    this.radio = 22;           // Radio de interacción
+    this.activado = false;     // ¿Ya fue activado?
+    this.flotacionOfs = Util.rand(0, Math.PI * 2); // Fase de flotación
+    this.escalaActual = 1;
+    this.brilloTimer = 0;
+    this.tiempoVida = 0;       // Frames transcurridos
+  }
+
+  /** Actualiza la animación flotante */
+  actualizar() {
+    this.tiempoVida++;
+    this.brilloTimer = Math.max(0, this.brilloTimer - 1);
+    // Pulsación suave cuando no está activado
+    if (!this.activado) {
+      this.escalaActual = 1 + Math.sin(this.tiempoVida * 0.04 + this.flotacionOfs) * 0.08;
+    } else {
+      this.escalaActual = Util.lerp(this.escalaActual, 0.6, 0.05);
+    }
+  }
+
+  /**
+   * Dibuja la flor simbólica
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  dibujar(ctx) {
+    const flotY = Math.sin(this.tiempoVida * 0.03 + this.flotacionOfs) * 4;
+
+    ctx.save();
+    ctx.translate(this.x, this.y + flotY);
+    ctx.scale(this.escalaActual, this.escalaActual);
+
+    if (this.activado) {
+      ctx.globalAlpha = 0.4;
+    }
+
+    // Brillo de fondo al pasar cerca
+    if (this.brilloTimer > 0) {
+      const alpha = (this.brilloTimer / 30) * 0.4;
+      const grad = ctx.createRadialGradient(0, 0, 5, 0, 0, 40);
+      grad.addColorStop(0, `rgba(255,220,80,${alpha})`);
+      grad.addColorStop(1, 'rgba(255,220,80,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(0, 0, 40, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Tallo
+    ctx.strokeStyle = '#5a8c3c';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(0, 10);
+    ctx.lineTo(0, 30);
+    ctx.stroke();
+
+    // Pétalos de la flor amarilla
+    const numPetalos = 8;
+    for (let i = 0; i < numPetalos; i++) {
+      const ang = (i / numPetalos) * Math.PI * 2;
+      const px = Math.cos(ang) * 11;
+      const py = Math.sin(ang) * 11;
+      ctx.fillStyle = this.activado ? '#888' : '#ffd700';
+      ctx.beginPath();
+      ctx.ellipse(px, py, 6, 4, ang, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Centro de la flor
+    ctx.fillStyle = this.activado ? '#666' : '#e67e00';
+    ctx.beginPath();
+    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ícono del recuerdo en el centro
+    ctx.fillStyle = '#fff';
+    ctx.font = '8px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.datos.icono || '💛', 0, 3);
+
+    ctx.textAlign = 'left';
+    ctx.restore();
+
+    // Etiqueta flotante si no fue activado
+    if (!this.activado) {
+      ctx.save();
+      ctx.globalAlpha = 0.7 + Math.sin(this.tiempoVida * 0.05) * 0.15;
+      ctx.fillStyle = '#f5d88a';
+      ctx.font = 'italic 11px Lato, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(this.datos.titulo || 'Recuerdo', this.x, this.y + flotY - 36);
+      ctx.textAlign = 'left';
+      ctx.restore();
+    }
+  }
+
+  /**
+   * Activa el recuerdo: reproduce audio, emite partículas
+   * @param {AudioManager} audio
+   * @param {SistemaParticulas} particulas
+   */
+  activar(audio, particulas) {
+    if (this.activado) return false;
+    this.activado = true;
+    audio.sonarInteraccion();
+    particulas.emitir(this.x, this.y, 15, 'corazon');
+    particulas.emitir(this.x, this.y, 8, 'flor');
+    this.brilloTimer = 30;
+    return true;
+  }
+
+  /** Indica si el jugador está dentro del radio de interacción */
+  enRango(px, py) {
+    return Util.dist(px, py, this.x, this.y) < this.radio + 20;
+  }
+}
+
+// ─────────────────────────────────────────
+//  JUGADOR
+//  Personaje controlado por point and click
+// ─────────────────────────────────────────
+class Jugador {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.destX = x;       // Destino de movimiento
+    this.destY = y;
+    this.velocidad = 2.8;  // Píxeles por frame
+    this.moviendose = false;
+    this.frame = 0;        // Frame de animación (0 o 1)
+    this.timerAnimacion = 0;
+    this.direccion = 1;    // 1 = derecha, -1 = izquierda
+    this.tiempoVida = 0;   // Para animación idle
+
+    // Historial de pasos para sonido
+    this.timerPaso = 0;
+  }
+
+  /**
+   * Establece el destino de movimiento al hacer clic
+   * @param {number} x - Destino X
+   * @param {number} y - Destino Y
+   */
+  establecerDestino(x, y) {
+    this.destX = x;
+    this.destY = y;
+    // Determinar dirección
+    if (x < this.x) this.direccion = -1;
+    else if (x > this.x) this.direccion = 1;
+    this.moviendose = true;
+  }
+
+  /**
+   * Actualiza posición y animación del jugador
+   * @param {AudioManager} audio
+   */
+  actualizar(audio) {
+    this.tiempoVida++;
+    const dx = this.destX - this.x;
+    const dy = this.destY - this.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist > 1.5 && this.moviendose) {
+      // Normaliza y aplica velocidad
+      const paso = Math.min(this.velocidad, dist);
+      this.x += (dx / dist) * paso;
+      this.y += (dy / dist) * paso;
+
+      // Animación de caminar
+      this.timerAnimacion++;
+      if (this.timerAnimacion >= 12) {
+        this.frame = 1 - this.frame;
+        this.timerAnimacion = 0;
+      }
+
+      // Sonido de pasos
+      this.timerPaso++;
+      if (this.timerPaso >= 28) {
+        audio.sonarPaso();
+        this.timerPaso = 0;
+      }
+    } else if (this.moviendose) {
+      // Corrección exacta al destino para evitar vibración
+      this.x = this.destX;
+      this.y = this.destY;
+      this.moviendose = false;
+      this.frame = 0;
+    }
+  }
+
+  /**
+   * Dibuja el personaje del jugador como figura emocional estilizada
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  dibujar(ctx) {
+    const idleOfs = Math.sin(this.tiempoVida * 0.05) * 1.5;
+    ctx.save();
+    ctx.translate(this.x, this.y + idleOfs);
+    ctx.scale(this.direccion, 1);
+
+    // Sombra en el suelo
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath();
+    ctx.ellipse(0, 22, 12, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Piernas (animadas al caminar)
+    const piernOfs = this.moviendose ? Math.sin(this.tiempoVida * 0.3) * 5 : 0;
+    ctx.fillStyle = '#5a3e28';
+    // Pierna izquierda
+    ctx.save();
+    ctx.translate(-5, 8);
+    ctx.rotate(piernOfs * 0.08);
+    ctx.fillRect(-3, 0, 6, 14);
+    ctx.restore();
+    // Pierna derecha
+    ctx.save();
+    ctx.translate(5, 8);
+    ctx.rotate(-piernOfs * 0.08);
+    ctx.fillRect(-3, 0, 6, 14);
+    ctx.restore();
+
+    // Cuerpo / vestido estilizado
+    ctx.fillStyle = '#c8860a';
+    ctx.beginPath();
+    ctx.moveTo(-10, -2);
+    ctx.lineTo(10, -2);
+    ctx.lineTo(12, 12);
+    ctx.lineTo(-12, 12);
+    ctx.closePath();
+    ctx.fill();
+
+    // Brazos
+    const brazOfs = this.moviendose ? Math.sin(this.tiempoVida * 0.3 + Math.PI) * 6 : 0;
+    ctx.fillStyle = '#e8a820';
+    // Brazo izquierdo
+    ctx.save();
+    ctx.translate(-12, 0);
+    ctx.rotate(brazOfs * 0.05 + 0.2);
+    ctx.fillRect(-2, -2, 5, 12);
+    ctx.restore();
+    // Brazo derecho
+    ctx.save();
+    ctx.translate(10, 0);
+    ctx.rotate(-brazOfs * 0.05 - 0.2);
+    ctx.fillRect(-3, -2, 5, 12);
+    ctx.restore();
+
+    // Cabeza
+    ctx.fillStyle = '#f0c080';
+    ctx.beginPath();
+    ctx.arc(0, -14, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cabello
+    ctx.fillStyle = '#3d1a00';
+    ctx.beginPath();
+    ctx.ellipse(0, -22, 10, 6, 0, Math.PI, 0);
+    ctx.fill();
+    // Mechón
+    ctx.beginPath();
+    ctx.ellipse(8, -18, 4, 3, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ojos
+    ctx.fillStyle = '#1a0800';
+    ctx.beginPath();
+    ctx.arc(-3.5, -13, 2, 0, Math.PI * 2);
+    ctx.arc(3.5, -13, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sonrisa
+    ctx.strokeStyle = '#8b4513';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(0, -10, 3.5, 0.1, Math.PI - 0.1);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // Indicador de destino (si se está moviendo)
+    if (this.moviendose) {
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = '#f5d88a';
+      ctx.lineWidth = 1.5;
+      const radio = 8 + Math.sin(this.tiempoVida * 0.15) * 3;
+      ctx.beginPath();
+      ctx.arc(this.destX, this.destY, radio, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
+
+// ─────────────────────────────────────────
+//  ÁLBUM DE RECUERDOS
+//  Galería interactiva de logros desbloqueados
+// ─────────────────────────────────────────
+class AlbumRecuerdos {
+  constructor() {
+    // Catálogo completo de recuerdos desbloqueables
+    this.catalogo = [
+      {
+        id: 'primera_flor',
+        icono: '🌻',
+        titulo: 'Primera Cita',
+        desc: 'El lugar donde todo comenzó',
+        desbloqueado: false
+      },
+      {
+        id: 'pregunta_cafe',
+        icono: '☕',
+        titulo: 'El Café',
+        desc: 'La orden perfecta de siempre',
+        desbloqueado: false
+      },
+      {
+        id: 'momento_lluvia',
+        icono: '🌧️',
+        titulo: 'Bajo la Lluvia',
+        desc: 'Los días difíciles también cuentan',
+        desbloqueado: false
+      },
+      {
+        id: 'minijuego_superado',
+        icono: '🤗',
+        titulo: 'El Abrazo',
+        desc: 'Después de cada tormenta, paz',
+        desbloqueado: false
+      },
+      {
+        id: 'segundo_recuerdo',
+        icono: '💌',
+        titulo: 'La Promesa',
+        desc: 'Las palabras que no se olvidan',
+        desbloqueado: false
+      },
+      {
+        id: 'tercer_recuerdo',
+        icono: '🌅',
+        titulo: 'El Atardecer',
+        desc: 'Un momento suspendido en el tiempo',
+        desbloqueado: false
+      }
+    ];
+  }
+
+  /** Desbloquea un recuerdo por su ID */
+  desbloquear(id) {
+    const recuerdo = this.catalogo.find(r => r.id === id);
+    if (recuerdo && !recuerdo.desbloqueado) {
+      recuerdo.desbloqueado = true;
+      return true;
+    }
+    return false;
+  }
+
+  /** Devuelve el número de recuerdos desbloqueados */
+  cantidadDesbloqueados() {
+    return this.catalogo.filter(r => r.desbloqueado).length;
+  }
+
+  /** Renderiza el álbum en el modal HTML */
+  renderizarModal() {
+    const galeria = document.getElementById('album-galeria');
+    galeria.innerHTML = '';
+    this.catalogo.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'album-card' + (r.desbloqueado ? '' : ' bloqueado');
+      card.innerHTML = `
+        <div class="icono">${r.desbloqueado ? r.icono : '🔒'}</div>
+        <div class="titulo">${r.titulo}</div>
+        <div class="desc">${r.desbloqueado ? r.desc : 'Sigue explorando...'}</div>
+      `;
+      galeria.appendChild(card);
+    });
+  }
+}
+
+// ─────────────────────────────────────────
+//  TRANSITION MANAGER
+//  Efectos de fundido entre escenas
+// ─────────────────────────────────────────
+class TransitionManager {
+  constructor() {
+    this.activo = false;
+    this.alpha = 0;
+    this.direccion = 1;   // 1 = fundido a negro, -1 = fundido desde negro
+    this.velocidad = 0.025;
+    this.callback = null;
+  }
+
+  /**
+   * Inicia una transición de fundido
+   * @param {Function} callback - Se ejecuta cuando la pantalla está en negro
+   */
+  iniciar(callback) {
+    this.activo = true;
+    this.alpha = 0;
+    this.direccion = 1;
+    this.callback = callback;
+    this.callbackEjecutado = false;
+  }
+
+  actualizar() {
+    if (!this.activo) return;
+    this.alpha += this.velocidad * this.direccion;
+    if (this.alpha >= 1 && !this.callbackEjecutado) {
+      this.alpha = 1;
+      this.callbackEjecutado = true;
+      this.callback && this.callback();
+      this.direccion = -1; // Comienza a desvanecerse
+    }
+    if (this.alpha <= 0 && this.direccion === -1) {
+      this.alpha = 0;
+      this.activo = false;
+    }
+  }
+
+  dibujar(ctx) {
+    if (!this.activo || this.alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    ctx.restore();
+  }
+}
+
+// ─────────────────────────────────────────
+//  ESCENA BASE
+//  Clase abstracta de la que heredan todas las escenas
+// ─────────────────────────────────────────
+class Scene {
+  /**
+   * @param {Object} motor - Referencia al motor principal del juego
+   */
+  constructor(motor) {
+    this.motor = motor;
+  }
+
+  /** Inicialización de la escena (llamado al entrar) */
+  iniciar() {}
+
+  /** Actualización lógica por frame */
+  actualizar() {}
+
+  /**
+   * Renderizado de la escena
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  dibujar(ctx) {}
+
+  /** Manejo de clic del ratón */
+  onClic(x, y) {}
+
+  /** Manejo de teclas */
+  onTecla(e) {}
+}
+
+// ─────────────────────────────────────────
+//  SCENE MANAGER
+//  Controla qué escena está activa y las transiciones
+// ─────────────────────────────────────────
+class SceneManager {
+  constructor() {
+    this.escenas = {};
+    this.escenaActual = null;
+    this.transitions = new TransitionManager();
+  }
+
+  registrar(nombre, escena) {
+    this.escenas[nombre] = escena;
+  }
+
+  /**
+   * Cambia a una escena con transición de fundido
+   * @param {string} nombre - Nombre de la escena destino
+   */
+  irA(nombre) {
+    this.transitions.iniciar(() => {
+      if (this.escenaActual) {
+        // (Limpieza si es necesario)
+      }
+      this.escenaActual = this.escenas[nombre];
+      this.escenaActual.iniciar();
+    });
+  }
+
+  actualizar() {
+    this.transitions.actualizar();
+    if (this.escenaActual) this.escenaActual.actualizar();
+  }
+
+  dibujar(ctx) {
+    if (this.escenaActual) this.escenaActual.dibujar(ctx);
+    this.transitions.dibujar(ctx);
+  }
+
+  onClic(x, y) {
+    if (this.transitions.activo) return;
+    if (this.escenaActual) this.escenaActual.onClic(x, y);
+  }
+
+  onTecla(e) {
+    if (this.escenaActual) this.escenaActual.onTecla(e);
+  }
+}
+
+// ─────────────────────────────────────────
+//  GENERADOR DE FONDOS
+//  Fondos pintados con canvas (sin imágenes externas)
+// ─────────────────────────────────────────
+const FondosPintados = {
+  /**
+   * Dibuja el fondo de café cálido (Escena 1)
+   * Incluye efecto parallax con capa de decoración
+   */
+  cafe(ctx, tiempoVida) {
+    // Cielo / ambiente cálido
+    const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    grad.addColorStop(0, '#1a0a00');
+    grad.addColorStop(0.5, '#3d1a00');
+    grad.addColorStop(1, '#2a1000');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Paredes de ladrillo estilizadas
+    ctx.fillStyle = '#2d1200';
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H * 0.6);
+
+    // Patrón de ladrillos (parallax: se mueve más lento que el primer plano)
+    const paralaxX = Math.sin(tiempoVida * 0.001) * 3;
+    ctx.strokeStyle = 'rgba(80,30,5,0.4)';
+    ctx.lineWidth = 1;
+    for (let fy = 0; fy < CANVAS_H * 0.6; fy += 18) {
+      for (let fx = (fy % 36 === 0 ? 0 : 20) + paralaxX; fx < CANVAS_W + 40; fx += 40) {
+        ctx.strokeRect(fx, fy, 38, 16);
+      }
+    }
+
+    // Suelo de madera
+    const gradSuelo = ctx.createLinearGradient(0, CANVAS_H * 0.6, 0, CANVAS_H);
+    gradSuelo.addColorStop(0, '#3d1e00');
+    gradSuelo.addColorStop(1, '#1a0900');
+    ctx.fillStyle = gradSuelo;
+    ctx.fillRect(0, CANVAS_H * 0.6, CANVAS_W, CANVAS_H * 0.4);
+
+    // Líneas de madera
+    ctx.strokeStyle = 'rgba(90,40,5,0.3)';
+    ctx.lineWidth = 1.5;
+    for (let fy = CANVAS_H * 0.6 + 10; fy < CANVAS_H; fy += 20) {
+      ctx.beginPath();
+      ctx.moveTo(0, fy);
+      ctx.lineTo(CANVAS_W, fy);
+      ctx.stroke();
+    }
+
+    // Ventana (segunda capa parallax, más pronunciada)
+    const paralaxVentana = Math.sin(tiempoVida * 0.0008) * 5;
+    ctx.save();
+    ctx.translate(paralaxVentana, 0);
+    // Marco de ventana
+    ctx.fillStyle = '#5a3010';
+    ctx.fillRect(60, 30, 160, 120);
+    // Cristal con efecto de lluvia suave exterior
+    ctx.fillStyle = 'rgba(100,160,200,0.15)';
+    ctx.fillRect(68, 38, 144, 104);
+    // Reflejo
+    ctx.fillStyle = 'rgba(255,200,100,0.08)';
+    ctx.fillRect(68, 38, 50, 104);
+    // Barras de ventana
+    ctx.strokeStyle = '#3d1a00';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(140, 38); ctx.lineTo(140, 142);
+    ctx.moveTo(68, 90);  ctx.lineTo(212, 90);
+    ctx.stroke();
+    // Luz exterior (luna / farola)
+    ctx.fillStyle = 'rgba(200,180,100,0.12)';
+    ctx.beginPath();
+    ctx.ellipse(140, 90, 50, 50, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Mesa de café (primer plano)
+    ctx.fillStyle = '#5a2d00';
+    ctx.fillRect(520, 290, 200, 12);
+    ctx.fillStyle = '#4a2000';
+    ctx.fillRect(560, 302, 20, 80);
+    ctx.fillRect(660, 302, 20, 80);
+    // Taza en la mesa
+    ctx.fillStyle = '#f0e8d0';
+    ctx.beginPath();
+    ctx.ellipse(600, 286, 22, 10, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#6b3a00';
+    ctx.beginPath();
+    ctx.ellipse(600, 282, 16, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Vapor de la taza
+    for (let i = 0; i < 3; i++) {
+      const vx = 592 + i * 8;
+      const vy = 270 + Math.sin(tiempoVida * 0.05 + i) * 5;
+      ctx.strokeStyle = `rgba(220,220,220,${0.2 - i * 0.05})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(vx, vy);
+      ctx.quadraticCurveTo(vx + 5, vy - 12, vx, vy - 24);
+      ctx.stroke();
+    }
+
+    // Velas en el ambiente
+    [180, 700].forEach((cx) => {
+      ctx.fillStyle = '#f5e0a0';
+      ctx.fillRect(cx - 4, 260, 8, 30);
+      // Llama
+      const llY = 255 + Math.sin(tiempoVida * 0.08 + cx) * 2;
+      const llGrad = ctx.createRadialGradient(cx, llY, 0, cx, llY, 12);
+      llGrad.addColorStop(0, 'rgba(255,200,50,0.9)');
+      llGrad.addColorStop(0.5, 'rgba(255,100,20,0.5)');
+      llGrad.addColorStop(1, 'rgba(255,100,20,0)');
+      ctx.fillStyle = llGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx, llY, 8, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Halo de luz
+      const haloGrad = ctx.createRadialGradient(cx, llY, 0, cx, llY, 60);
+      haloGrad.addColorStop(0, 'rgba(255,180,50,0.12)');
+      haloGrad.addColorStop(1, 'rgba(255,180,50,0)');
+      ctx.fillStyle = haloGrad;
+      ctx.beginPath();
+      ctx.ellipse(cx, llY, 60, 60, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  },
+
+  /**
+   * Dibuja el fondo lluvioso (Escena 2 - Minijuego de desafíos)
+   * Con efecto de lluvia animada
+   */
+  lluvia(ctx, tiempoVida) {
+    // Cielo oscuro y nublado
+    const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    grad.addColorStop(0, '#080c14');
+    grad.addColorStop(0.4, '#0e1a28');
+    grad.addColorStop(1, '#0a1018');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Nubes oscuras (parallax)
+    ctx.fillStyle = 'rgba(30,40,60,0.6)';
+    [
+      [50 + Math.sin(tiempoVida * 0.002) * 20, 40, 140, 50],
+      [300 + Math.sin(tiempoVida * 0.0015 + 1) * 15, 20, 180, 60],
+      [580 + Math.sin(tiempoVida * 0.001 + 2) * 25, 50, 150, 45]
+    ].forEach(([x, y, w, h]) => {
+      ctx.beginPath();
+      ctx.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Lluvia animada
+    ctx.strokeStyle = 'rgba(150,180,220,0.35)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 80; i++) {
+      const rx = ((i * 137 + tiempoVida * 3) % CANVAS_W);
+      const ry = ((i * 97 + tiempoVida * 5) % CANVAS_H);
+      ctx.beginPath();
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(rx - 2, ry + 12);
+      ctx.stroke();
+    }
+
+    // Suelo mojado con reflejo
+    const gradSuelo = ctx.createLinearGradient(0, CANVAS_H * 0.72, 0, CANVAS_H);
+    gradSuelo.addColorStop(0, '#0a1018');
+    gradSuelo.addColorStop(1, '#050a10');
+    ctx.fillStyle = gradSuelo;
+    ctx.fillRect(0, CANVAS_H * 0.72, CANVAS_W, CANVAS_H * 0.28);
+
+    // Charcos con reflejo
+    ctx.fillStyle = 'rgba(100,150,200,0.08)';
+    [[150, 420, 80, 12], [500, 440, 100, 10], [680, 410, 60, 9]].forEach(([x, y, w, h]) => {
+      ctx.beginPath();
+      ctx.ellipse(x, y, w, h, 0, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Edificios al fondo (parallax sutil)
+    const paralaxEdif = Math.sin(tiempoVida * 0.0005) * 2;
+    ctx.fillStyle = 'rgba(15,20,35,0.8)';
+    [[0, 200, 80, 300], [100, 160, 100, 340], [240, 220, 70, 280],
+     [580, 180, 90, 320], [700, 210, 100, 290]].forEach(([ex, ey, ew, eh]) => {
+      ctx.fillRect(ex + paralaxEdif, ey, ew, eh);
+      // Ventanas iluminadas
+      for (let wr = 0; wr < 3; wr++) {
+        for (let wc = 0; wc < 2; wc++) {
+          if (Math.random() > 0.6) {
+            ctx.fillStyle = `rgba(255,220,100,${0.15 + Math.sin(tiempoVida * 0.02 + wr + wc * 3) * 0.05})`;
+            ctx.fillRect(ex + paralaxEdif + 10 + wc * 30, ey + 20 + wr * 30, 16, 12);
+          }
+        }
+      }
+      ctx.fillStyle = 'rgba(15,20,35,0.8)';
+    });
+  },
+
+  /**
+   * Dibuja el fondo de atardecer (Escena 3 - Final)
+   */
+  atardecer(ctx, tiempoVida) {
+    // Cielo gradual
+    const grad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+    grad.addColorStop(0, '#0d0a1a');
+    grad.addColorStop(0.3, '#3d1040');
+    grad.addColorStop(0.6, '#8b2000');
+    grad.addColorStop(0.8, '#e85000');
+    grad.addColorStop(1, '#ff8c00');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Sol en el horizonte
+    const solY = CANVAS_H * 0.68 + Math.sin(tiempoVida * 0.005) * 3;
+    const solGrad = ctx.createRadialGradient(CANVAS_W / 2, solY, 0, CANVAS_W / 2, solY, 80);
+    solGrad.addColorStop(0, 'rgba(255,220,80,0.9)');
+    solGrad.addColorStop(0.5, 'rgba(255,140,0,0.5)');
+    solGrad.addColorStop(1, 'rgba(255,80,0,0)');
+    ctx.fillStyle = solGrad;
+    ctx.beginPath();
+    ctx.arc(CANVAS_W / 2, solY, 80, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reflejo en el agua / tierra
+    ctx.fillStyle = 'rgba(255,140,0,0.15)';
+    ctx.fillRect(0, CANVAS_H * 0.7, CANVAS_W, CANVAS_H * 0.3);
+
+    // Siluetas de árboles (parallax)
+    const paralaxArboles = Math.sin(tiempoVida * 0.0008) * 4;
+    ctx.fillStyle = '#0a0508';
+    [[30, 280, 20, 120], [100, 250, 25, 150], [650, 270, 22, 130], [730, 240, 28, 160]].forEach(([tx, ty, tw, th]) => {
+      ctx.fillRect(tx + tw / 2 - 3 + paralaxArboles, ty, 6, th);
+      ctx.beginPath();
+      ctx.arc(tx + tw / 2 + paralaxArboles, ty, tw, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Estrellas tempranas
+    for (let i = 0; i < 30; i++) {
+      const sx = (i * 197) % CANVAS_W;
+      const sy = (i * 127) % (CANVAS_H * 0.4);
+      const alpha = Math.max(0, Math.sin(tiempoVida * 0.02 + i) * 0.5 + 0.3);
+      ctx.fillStyle = `rgba(255,255,220,${alpha})`;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Suelo
+    ctx.fillStyle = '#1a0800';
+    ctx.fillRect(0, CANVAS_H * 0.75, CANVAS_W, CANVAS_H * 0.25);
+  }
+};
+
+// ─────────────────────────────────────────
+//  ESCENA 1: PRIMERA CITA
+//  Ambiente de café cálido con recuerdos interactivos
+// ─────────────────────────────────────────
+class Scene_PrimeraCita extends Scene {
+  iniciar() {
+    const m = this.motor;
+
+    // Posición inicial del jugador
+    m.jugador.x = 100;
+    m.jugador.y = CANVAS_H * 0.65;
+    m.jugador.destX = m.jugador.x;
+    m.jugador.destY = m.jugador.y;
+
+    // Objetos de recuerdo con sus diálogos
+    this.recuerdos = [
+      new ObjetoRecuerdo(280, CANVAS_H * 0.62, {
+        id: 'primera_flor',
+        icono: '🌻',
+        titulo: 'El comienzo',
+        dialogo: [
+          'Aquí fue donde todo empezó... ¿recuerdas?',
+          'El olor a café recién hecho, la luz suave de la tarde...',
+          'Te veía desde la esquina y no sabía cómo acercarme.',
+          {
+            pregunta: '¿Cuál fue lo primero que pediste en ese café? (escribe tu respuesta)',
+            respuestas: ['cafe', 'café', 'americano', 'cortado', 'capuchino', 'latte', 'te', 'té', 'agua', 'jugo', 'soda'],
+            feedbackOk: '💛 Sí... exactamente eso. No lo he olvidado.',
+            feedbackError: [
+              'Hmm... ¿seguro? Intenta recordarlo 💭',
+              'Creo que estás confundiendo... sigue intentando.',
+              'Pista: era algo que tomabas siempre en esa época.'
+            ]
+          },
+          '💛 Ese momento quedó guardado aquí, en este recuerdo...',
+          '¡Primer recuerdo desbloqueado! Sigue explorando el café.'
+        ],
+        album_id: 'primera_flor'
+      }),
+      new ObjetoRecuerdo(520, CANVAS_H * 0.58, {
+        id: 'segundo_recuerdo',
+        icono: '💌',
+        titulo: 'La promesa',
+        dialogo: [
+          'Este rincón tiene algo especial...',
+          'Fue aquí donde me dijiste algo que nunca olvidé.',
+          'Estabas nerviosa. Yo también.',
+          {
+            pregunta: '¿Cuánto tiempo llevan juntos? (años, meses, o una fecha especial)',
+            respuestas: ['1', '2', '3', '4', '5', '6', 'un', 'dos', 'tres', 'años', 'meses', 'semanas', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
+            feedbackOk: '💛 Ese tiempo es nuestro tesoro más preciado.',
+            feedbackError: [
+              'No te preocupes... los recuerdos importantes vienen solos 💭',
+              'Piensa en la primera vez que pensaste "esto es especial"...'
+            ]
+          },
+          'Cada día desde entonces ha sido un regalo.',
+          '¡Segundo recuerdo desbloqueado!'
+        ],
+        album_id: 'segundo_recuerdo'
+      }),
+      new ObjetoRecuerdo(680, CANVAS_H * 0.65, {
+        id: 'tercer_recuerdo',
+        icono: '🌅',
+        titulo: 'El plan',
+        dialogo: [
+          'Esta es la última flor de este capítulo...',
+          'Me pregunto qué hay más allá de esta historia.',
+          {
+            pregunta: '¿Cuál es tu lugar favorito para estar junto a mí?',
+            respuestas: ['casa', 'cama', 'sofa', 'parque', 'playa', 'mar', 'campo', 'ciudad', 'cocina', 'cuarto', 'habitacion', 'restaurante', 'cafe', 'cine', 'carro', 'cualquier', 'donde', 'contigo'],
+            feedbackOk: '💛 Sí... en ese lugar soy completamente yo.',
+            feedbackError: [
+              '¿De verdad no lo sabes? Piensa en donde te sientes más tú... 💭',
+              'Pista: es un lugar donde el tiempo se detiene.'
+            ]
+          },
+          'Ese lugar existe porque tú existes.',
+          'Es hora de enfrentar el próximo capítulo... ¡Acércate a la puerta!'
+        ],
+        album_id: 'tercer_recuerdo'
+      })
+    ];
+
+    // Puerta de transición (aparece cuando todos los recuerdos están activados)
+    this.puerta = { x: CANVAS_W - 50, y: CANVAS_H * 0.45, activa: false };
+
+    // Indicador de instrucción
+    this.mostrarInstruccion = true;
+    setTimeout(() => { this.mostrarInstruccion = false; }, 4000);
+
+    this.tiempoVida = 0;
+  }
+
+  actualizar() {
+    const m = this.motor;
+    this.tiempoVida++;
+    m.jugador.actualizar(m.audio);
+    this.recuerdos.forEach(r => r.actualizar());
+    m.particulas.actualizar();
+    m.dialogos.actualizar();
+
+    // Activar puerta cuando todos los recuerdos estén activados
+    const todosActivados = this.recuerdos.every(r => r.activado);
+    if (todosActivados && !this.puerta.activa) {
+      this.puerta.activa = true;
+      m.audio.sonarVictoria();
+      m.particulas.emitir(this.puerta.x, this.puerta.y, 20, 'estrella');
+    }
+
+    // Verificar si el jugador llega a la puerta
+    if (this.puerta.activa && !m.dialogos.activo) {
+      const distPuerta = Util.dist(m.jugador.x, m.jugador.y, this.puerta.x, this.puerta.y);
+      if (distPuerta < 40) {
+        m.sceneManager.irA('desafio');
+      }
+    }
+
+    // Brillo de objetos cercanos
+    this.recuerdos.forEach(r => {
+      if (r.enRango(m.jugador.x, m.jugador.y) && !r.activado) {
+        r.brilloTimer = Math.max(r.brilloTimer, 30);
+      }
+    });
+
+    // Actualizar HUD
+    const desbloqueados = m.album.cantidadDesbloqueados();
+    document.getElementById('hud-recuerdos').textContent = `💛 ${desbloqueados} recuerdos`;
+    document.getElementById('hud-escena').textContent = 'Capítulo I · El Café';
+  }
+
+  dibujar(ctx) {
+    const m = this.motor;
+    FondosPintados.cafe(ctx, this.tiempoVida);
+
+    // Dibujar recuerdos
+    this.recuerdos.forEach(r => r.dibujar(ctx));
+
+    // Puerta de transición
+    this._dibujarPuerta(ctx);
+
+    // Jugador
+    m.jugador.dibujar(ctx);
+
+    // Partículas
+    m.particulas.dibujar(ctx);
+
+    // Diálogos
+    m.dialogos.dibujar(ctx);
+
+    // Indicador cuando todos activados
+    if (this.puerta.activa) {
+      const alpha = 0.7 + Math.sin(this.tiempoVida * 0.06) * 0.2;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#f5d88a';
+      ctx.font = 'italic 13px Lato, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('✨ ¡Acércate a la puerta para continuar!', CANVAS_W / 2, 40);
+      ctx.textAlign = 'left';
+      ctx.restore();
+    }
+  }
+
+  _dibujarPuerta(ctx) {
+    const p = this.puerta;
+    if (!p.activa) {
+      // Puerta bloqueada (sutil)
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = '#5a3010';
+      ctx.fillRect(p.x - 20, p.y - 60, 40, 80);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      return;
+    }
+
+    // Puerta activa y brillante
+    ctx.save();
+    const pulsacion = 1 + Math.sin(this.tiempoVida * 0.06) * 0.05;
+    ctx.translate(p.x, p.y);
+    ctx.scale(pulsacion, pulsacion);
+    ctx.translate(-p.x, -p.y);
+
+    // Marco
+    ctx.fillStyle = '#8b5a00';
+    ctx.fillRect(p.x - 22, p.y - 62, 44, 84);
+    ctx.fillStyle = '#c8860a';
+    ctx.fillRect(p.x - 18, p.y - 58, 36, 76);
+
+    // Brillo mágico
+    const brilloGrad = ctx.createRadialGradient(p.x, p.y - 20, 5, p.x, p.y - 20, 40);
+    brilloGrad.addColorStop(0, 'rgba(255,220,80,0.4)');
+    brilloGrad.addColorStop(1, 'rgba(255,140,0,0)');
+    ctx.fillStyle = brilloGrad;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y - 20, 40, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Icono de flecha
+    ctx.fillStyle = '#1a0800';
+    ctx.font = 'bold 16px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('→', p.x, p.y - 14);
+    ctx.font = '10px Lato, sans-serif';
+    ctx.fillText('Siguiente', p.x, p.y + 4);
+    ctx.textAlign = 'left';
+    ctx.restore();
+  }
+
+  onClic(x, y) {
+    const m = this.motor;
+
+    // Si hay diálogo activo: avanzar al hacer clic
+    if (m.dialogos.activo && !m.dialogos.enPregunta) {
+      m.dialogos.avanzar();
+      return;
+    }
+    if (m.dialogos.activo) return;
+
+    // Verificar si clicó en un recuerdo
+    let clicEnRecuerdo = false;
+    for (const r of this.recuerdos) {
+      if (!r.activado && r.enRango(x, y) && Util.dist(x, y, r.x, r.y) < 40) {
+        r.activar(m.audio, m.particulas);
+        m.album.desbloquear(r.datos.album_id);
+        // Iniciar diálogo con callback de respuesta correcta
+        m.dialogos.iniciar(r.datos.dialogo);
+        m.dialogos.onRespuestaCorrecta = (pregunta) => {
+          m.particulas.emitir(m.jugador.x, m.jugador.y - 20, 18, 'corazon');
+          m.particulas.emitir(m.jugador.x, m.jugador.y - 20, 8, 'estrella');
+          m.album.desbloquear(r.datos.album_id);
+        };
+        clicEnRecuerdo = true;
+        break;
+      }
+    }
+
+    // Si no clicó en recuerdo, mover jugador
+    if (!clicEnRecuerdo) {
+      m.jugador.establecerDestino(x, y);
+    }
+  }
+
+  onTecla(e) {
+    this.motor.dialogos.procesarTecla(e);
+  }
+}
+
+// ─────────────────────────────────────────
+//  ESCENA 2: DESAFÍO DIARIO (Minijuego)
+//  Esquivar obstáculos que representan el estrés cotidiano
+// ─────────────────────────────────────────
+class Scene_DesafioDiario extends Scene {
+  iniciar() {
+    const m = this.motor;
+
+    // Posición inicial del jugador en el minijuego
+    m.jugador.x = 80;
+    m.jugador.y = CANVAS_H * 0.65;
+    m.jugador.destX = m.jugador.x;
+    m.jugador.destY = m.jugador.y;
+    m.jugador.velocidad = 3.5;
+
+    // Estado del minijuego
+    this.obstaculos = [];
+    this.timerObstaculo = 0;
+    this.velocidadObstaculos = 2.2;
+    this.dificultad = 1;
+    this.timerDificultad = 0;
+    this.tiempoVida = 0;
+    this.colisionado = false;
+    this.timerColision = 0;
+
+    // Objetivo (abrazo simbólico)
+    this.objetivo = {
+      x: CANVAS_W - 80,
+      y: CANVAS_H * 0.62,
+      radio: 35,
+      alcanzado: false
+    };
+
+    // Mensaje introductorio
+    m.dialogos.iniciar([
+      'La vida tiene sus tormentas... ¿puedes atravesarlas?',
+      'Esquiva el estrés y llega hasta el abrazo. 🤗',
+      '¡Haz clic para moverte! Llega al corazón del otro lado.'
+    ]);
+    m.dialogos.onRespuestaCorrecta = null;
+
+    this.intro = true;
+
+    document.getElementById('hud-escena').textContent = 'Capítulo II · El Camino';
+  }
+
+  /** Genera un obstáculo nuevo (nube de estrés) */
+  _generarObstaculo() {
+    const y = Util.rand(CANVAS_H * 0.2, CANVAS_H * 0.78);
+    this.obstaculos.push({
+      x: CANVAS_W + 30,
+      y: y,
+      velocidad: this.velocidadObstaculos + Util.rand(-0.5, 0.5),
+      radio: Util.rand(20, 34),
+      tiempoVida: 0
+    });
+  }
+
+  actualizar() {
+    const m = this.motor;
+    this.tiempoVida++;
+    m.particulas.actualizar();
+    m.dialogos.actualizar();
+
+    if (m.dialogos.activo) {
+      if (this.intro && !m.dialogos.activo) {
+        this.intro = false;
+      }
+      return;
+    }
+    this.intro = false;
+
+    // Jugador
+    m.jugador.actualizar(m.audio);
+
+    // Colisión (reinicio)
+    if (this.colisionado) {
+      this.timerColision++;
+      if (this.timerColision > 80) {
+        this.colisionado = false;
+        this.timerColision = 0;
+        this.obstaculos = [];
+        m.jugador.x = 80;
+        m.jugador.y = CANVAS_H * 0.65;
+        m.jugador.destX = m.jugador.x;
+        m.jugador.destY = m.jugador.y;
+        m.dialogos.iniciar([
+          'El estrés te alcanzó esta vez... pero siempre puedes volver a intentarlo.',
+          'Así es la vida: nos caemos y nos levantamos.'
+        ]);
+      }
+      return;
+    }
+
+    if (this.objetivo.alcanzado) return;
+
+    // Dificultad progresiva
+    this.timerDificultad++;
+    if (this.timerDificultad > 300) {
+      this.timerDificultad = 0;
+      this.velocidadObstaculos = Math.min(5.5, this.velocidadObstaculos + 0.3);
+    }
+
+    // Generar obstáculos
+    this.timerObstaculo++;
+    const intervalGen = Math.max(40, 90 - this.tiempoVida * 0.05);
+    if (this.timerObstaculo >= intervalGen) {
+      this._generarObstaculo();
+      this.timerObstaculo = 0;
+    }
+
+    // Mover y limpiar obstáculos
+    this.obstaculos = this.obstaculos.filter(o => {
+      o.x -= o.velocidad;
+      o.tiempoVida++;
+      return o.x > -60;
+    });
+
+    // Detectar colisión jugador-obstáculo
+    for (const o of this.obstaculos) {
+      const distJugador = Util.dist(m.jugador.x, m.jugador.y, o.x, o.y);
+      if (distJugador < o.radio + 14) {
+        this.colisionado = true;
+        this.timerColision = 0;
+        m.audio.sonarError();
+        m.particulas.emitir(m.jugador.x, m.jugador.y, 10, 'estrella');
+        break;
+      }
+    }
+
+    // Detectar si llegó al objetivo
+    const distObj = Util.dist(m.jugador.x, m.jugador.y, this.objetivo.x, this.objetivo.y);
+    if (distObj < this.objetivo.radio + 16 && !this.objetivo.alcanzado) {
+      this.objetivo.alcanzado = true;
+      m.audio.sonarVictoria();
+      m.particulas.emitir(this.objetivo.x, this.objetivo.y, 30, 'corazon');
+      m.particulas.emitir(this.objetivo.x, this.objetivo.y, 20, 'estrella');
+      m.album.desbloquear('minijuego_superado');
+      m.album.desbloquear('momento_lluvia');
+      m.dialogos.iniciar([
+        '💛 ¡Lo lograste! Atravesaste la tormenta.',
+        'Así es como lo hacemos... juntos, siempre.',
+        'El final de este capítulo nos espera.',
+        'Un lugar más cálido, más nuestro.'
+      ]);
+      // Transición a escena final después del diálogo
+      setTimeout(() => {
+        if (!m.sceneManager.transitions.activo) {
+          m.sceneManager.irA('final');
+        }
+      }, 5000);
+    }
+  }
+
+  dibujar(ctx) {
+    const m = this.motor;
+    FondosPintados.lluvia(ctx, this.tiempoVida);
+
+    // Objetivo (corazón / abrazo)
+    this._dibujarObjetivo(ctx);
+
+    // Obstáculos (nubes de estrés)
+    this.obstaculos.forEach(o => this._dibujarObstaculo(ctx, o));
+
+    // Jugador
+    m.jugador.dibujar(ctx);
+
+    // Partículas
+    m.particulas.dibujar(ctx);
+
+    // Diálogos
+    m.dialogos.dibujar(ctx);
+
+    // Efecto de colisión
+    if (this.colisionado) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(0.4, (this.timerColision / 80) * 0.4);
+      ctx.fillStyle = '#ff3030';
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = 'rgba(255,150,150,0.9)';
+      ctx.font = 'italic 20px Playfair Display, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('El estrés te alcanzó... respira.', CANVAS_W / 2, CANVAS_H / 2);
+      ctx.textAlign = 'left';
+      ctx.restore();
+    }
+
+    // Indicador de progreso
+    if (!m.dialogos.activo && !this.objetivo.alcanzado && !this.colisionado) {
+      const distObj = Util.dist(m.jugador.x, m.jugador.y, this.objetivo.x, this.objetivo.y);
+      const progreso = Util.clamp(1 - distObj / (CANVAS_W - 160), 0, 1);
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(20, 20, 200, 8);
+      ctx.fillStyle = '#f5d88a';
+      ctx.fillRect(20, 20, 200 * progreso, 8);
+      ctx.fillStyle = 'rgba(245,216,138,0.7)';
+      ctx.font = '10px Lato, sans-serif';
+      ctx.fillText('Camino al abrazo', 20, 15);
+      ctx.restore();
+    }
+  }
+
+  /** Dibuja un obstáculo (nube de estrés) */
+  _dibujarObstaculo(ctx, o) {
+    ctx.save();
+    ctx.translate(o.x, o.y);
+
+    // Cuerpo de la nube oscura
+    const alpha = 0.7 + Math.sin(o.tiempoVida * 0.05) * 0.15;
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = '#1a2a40';
+
+    const partes = [
+      [0, 0, o.radio],
+      [-o.radio * 0.6, o.radio * 0.2, o.radio * 0.7],
+      [o.radio * 0.6, o.radio * 0.2, o.radio * 0.7],
+      [0, o.radio * 0.35, o.radio * 0.75]
+    ];
+    partes.forEach(([px, py, pr]) => {
+      ctx.beginPath();
+      ctx.arc(px, py, pr, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Texto de estrés (palabras simbólicas)
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#4a6080';
+    ctx.font = `bold ${Math.floor(o.radio * 0.5)}px Lato, sans-serif`;
+    ctx.textAlign = 'center';
+    const palabras = ['😰', '😓', '😤', '💢', '😩'];
+    ctx.fillText(palabras[Math.floor(o.tiempoVida * 0.02) % palabras.length], 0, 6);
+    ctx.textAlign = 'left';
+    ctx.restore();
+  }
+
+  /** Dibuja el objetivo final (abrazo simbólico) */
+  _dibujarObjetivo(ctx) {
+    const o = this.objetivo;
+    const pulso = 1 + Math.sin(this.tiempoVida * 0.07) * 0.12;
+    ctx.save();
+    ctx.translate(o.x, o.y);
+    ctx.scale(pulso, pulso);
+
+    // Halo dorado
+    const grad = ctx.createRadialGradient(0, 0, 10, 0, 0, o.radio + 20);
+    grad.addColorStop(0, 'rgba(255,215,0,0.4)');
+    grad.addColorStop(1, 'rgba(255,140,0,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, o.radio + 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dos figuras abrazándose (simbólico)
+    // Figura 1
+    ctx.fillStyle = '#c8860a';
+    ctx.beginPath();
+    ctx.arc(-8, -14, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(-13, -6, 12, 18);
+
+    // Figura 2
+    ctx.fillStyle = '#e8a820';
+    ctx.beginPath();
+    ctx.arc(8, -14, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(1, -6, 12, 18);
+
+    // Brazos del abrazo
+    ctx.strokeStyle = '#c8860a';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(0, 0, 16, 0.3, Math.PI - 0.3);
+    ctx.stroke();
+    ctx.strokeStyle = '#e8a820';
+    ctx.beginPath();
+    ctx.arc(0, 0, 16, Math.PI + 0.3, -0.3);
+    ctx.stroke();
+
+    // Corazón flotante
+    ctx.fillStyle = 'rgba(255,100,150,0.8)';
+    ctx.font = '14px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('💛', 0, -28);
+    ctx.textAlign = 'left';
+
+    ctx.restore();
+
+    // Etiqueta
+    if (!o.alcanzado) {
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = '#f5d88a';
+      ctx.font = 'italic 12px Lato, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('El abrazo', o.x, o.y + o.radio + 16);
+      ctx.textAlign = 'left';
+      ctx.restore();
+    }
+  }
+
+  onClic(x, y) {
+    const m = this.motor;
+    if (m.dialogos.activo && !m.dialogos.enPregunta) {
+      m.dialogos.avanzar();
+      return;
+    }
+    if (m.dialogos.activo || this.colisionado || this.objetivo.alcanzado) return;
+    m.jugador.establecerDestino(x, y);
+  }
+
+  onTecla(e) {
+    this.motor.dialogos.procesarTecla(e);
+  }
+}
+
+// ─────────────────────────────────────────
+//  ESCENA 3: FINAL CINEMATOGRÁFICO
+//  Atardecer con mensaje personalizado y cierre emocional
+// ─────────────────────────────────────────
+class Scene_Final extends Scene {
+  iniciar() {
+    const m = this.motor;
+
+    m.jugador.x = CANVAS_W / 2 - 40;
+    m.jugador.y = CANVAS_H * 0.68;
+    m.jugador.destX = m.jugador.x;
+    m.jugador.destY = m.jugador.y;
+    m.jugador.velocidad = 2;
+
+    this.tiempoVida = 0;
+    this.faseCartaAlpha = 0; // Aparición gradual de la carta
+    this.cartaVisible = false;
+    this.cartaCompleta = false;
+    this.timerCarta = 0;
+
+    // Figura de pareja (segundo personaje)
+    this.pareja = { x: CANVAS_W / 2 + 40, y: CANVAS_H * 0.68 };
+
+    // Flores alrededor de la escena final
+    this.flores = [];
+    for (let i = 0; i < 8; i++) {
+      this.flores.push({
+        x: Util.rand(60, CANVAS_W - 60),
+        y: CANVAS_H * 0.7 + Util.rand(-20, 30),
+        fase: Util.rand(0, Math.PI * 2),
+        escala: Util.rand(0.7, 1.1)
+      });
+    }
+
+    m.dialogos.iniciar([
+      '💛 Lo lograste. Llegaste hasta aquí.',
+      'Este lugar es nuestro atardecer favorito.',
+      'No importa cuántas tormentas vengan...',
+      '...siempre terminaremos aquí, juntos, mirando el horizonte.',
+      'Esta aventura es solo un eco de todo lo que vivimos.',
+      'Y lo mejor está por venir. 💛'
+    ]);
+    m.dialogos.onRespuestaCorrecta = null;
+
+    document.getElementById('hud-escena').textContent = 'Capítulo III · El Atardecer';
+  }
+
+  actualizar() {
+    const m = this.motor;
+    this.tiempoVida++;
+    m.dialogos.actualizar();
+    m.particulas.actualizar();
+
+    if (!m.dialogos.activo) {
+      // Mostrar carta después del diálogo
+      this.timerCarta++;
+      if (this.timerCarta > 60 && !this.cartaVisible) {
+        this.cartaVisible = true;
+      }
+      if (this.cartaVisible && this.faseCartaAlpha < 1) {
+        this.faseCartaAlpha = Math.min(1, this.faseCartaAlpha + 0.015);
+      }
+      if (this.faseCartaAlpha >= 0.99 && !this.cartaCompleta) {
+        this.cartaCompleta = true;
+        // Emisión de partículas festivas
+        m.particulas.emitir(CANVAS_W / 2, CANVAS_H / 2, 25, 'corazon');
+        m.particulas.emitir(CANVAS_W / 2, CANVAS_H / 2, 15, 'estrella');
+        m.audio.sonarVictoria();
+      }
+    }
+
+    // Jugador camina suavemente hacia la pareja si no hay diálogo
+    if (!m.dialogos.activo && !this.cartaVisible) {
+      m.jugador.actualizar(m.audio);
+    }
+
+    // Partículas ambientales de corazones en el atardecer
+    if (this.tiempoVida % 45 === 0 && this.cartaVisible) {
+      m.particulas.emitir(
+        Util.rand(100, CANVAS_W - 100),
+        CANVAS_H * 0.6,
+        3, 'corazon'
+      );
+    }
+  }
+
+  dibujar(ctx) {
+    const m = this.motor;
+    FondosPintados.atardecer(ctx, this.tiempoVida);
+
+    // Flores decorativas
+    this.flores.forEach(f => {
+      const flotY = Math.sin(this.tiempoVida * 0.03 + f.fase) * 3;
+      ctx.save();
+      ctx.translate(f.x, f.y + flotY);
+      ctx.scale(f.escala, f.escala);
+      // Pétalos
+      for (let i = 0; i < 6; i++) {
+        const ang = (i / 6) * Math.PI * 2;
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(ang) * 8, Math.sin(ang) * 8, 5, 3, ang, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = '#e67e00';
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Figura de la pareja (segundo personaje estilizado)
+    this._dibujarPareja(ctx);
+
+    // Jugador
+    m.jugador.dibujar(ctx);
+
+    // Partículas
+    m.particulas.dibujar(ctx);
+
+    // Carta / mensaje final
+    if (this.cartaVisible) {
+      this._dibujarCartaFinal(ctx);
+    }
+
+    // Diálogos
+    m.dialogos.dibujar(ctx);
+  }
+
+  /** Dibuja el segundo personaje (la pareja) */
+  _dibujarPareja(ctx) {
+    const p = this.pareja;
+    const idleOfs = Math.sin(this.tiempoVida * 0.05 + 1) * 1.5;
+    ctx.save();
+    ctx.translate(p.x, p.y + idleOfs);
+    ctx.scale(-1, 1); // Mirando hacia el jugador
+
+    // Sombra
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath();
+    ctx.ellipse(0, 22, 12, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Piernas
+    ctx.fillStyle = '#2a1a40';
+    ctx.fillRect(-8, 8, 6, 14);
+    ctx.fillRect(2, 8, 6, 14);
+
+    // Cuerpo
+    ctx.fillStyle = '#8b2252';
+    ctx.beginPath();
+    ctx.moveTo(-10, -2);
+    ctx.lineTo(10, -2);
+    ctx.lineTo(12, 12);
+    ctx.lineTo(-12, 12);
+    ctx.closePath();
+    ctx.fill();
+
+    // Brazos
+    ctx.fillStyle = '#b04070';
+    ctx.save();
+    ctx.translate(-13, 0);
+    ctx.rotate(0.3);
+    ctx.fillRect(-2, -2, 5, 12);
+    ctx.restore();
+    ctx.save();
+    ctx.translate(11, 0);
+    ctx.rotate(-0.3);
+    ctx.fillRect(-3, -2, 5, 12);
+    ctx.restore();
+
+    // Cabeza
+    ctx.fillStyle = '#f0c880';
+    ctx.beginPath();
+    ctx.arc(0, -14, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Cabello
+    ctx.fillStyle = '#1a0808';
+    ctx.beginPath();
+    ctx.ellipse(0, -22, 10, 5, 0, Math.PI, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(-8, -16, 5, 8, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ojos
+    ctx.fillStyle = '#1a0800';
+    ctx.beginPath();
+    ctx.arc(-3.5, -13, 2, 0, Math.PI * 2);
+    ctx.arc(3.5, -13, 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  /** Dibuja la carta final con mensaje emocional */
+  _dibujarCartaFinal(ctx) {
+    const alpha = this.faseCartaAlpha;
+    const cX = CANVAS_W / 2;
+    const cY = CANVAS_H / 2 - 30;
+    const cW = 460;
+    const cH = 200;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+
+    // Fondo de la carta
+    ctx.fillStyle = 'rgba(20,8,0,0.92)';
+    ctx.strokeStyle = 'rgba(245,216,138,0.5)';
+    ctx.lineWidth = 2;
+    const rx = cX - cW / 2;
+    const ry = cY - cH / 2;
+
+    // Sombra
+    ctx.shadowColor = 'rgba(200,134,10,0.4)';
+    ctx.shadowBlur = 30;
+    this._roundRect(ctx, rx, ry, cW, cH, 14);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.stroke();
+
+    // Decoración superior
+    ctx.fillStyle = 'rgba(245,216,138,0.3)';
+    ctx.fillRect(rx + 20, ry + 1, 80, 2);
+    ctx.fillRect(cX + cW / 2 - 100, ry + 1, 80, 2);
+
+    // Texto de la carta
+    ctx.globalAlpha = alpha;
+    ctx.font = 'italic 16px Playfair Display, serif';
+    ctx.fillStyle = '#f5d88a';
+    ctx.textAlign = 'center';
+    ctx.fillText('Para ti, con todo mi amor 💛', cX, ry + 38);
+
+    ctx.font = '13px Lato, sans-serif';
+    ctx.fillStyle = '#e0c8a0';
+    const lineas = [
+      'Este pequeño mundo fue creado pensando en cada momento',
+      'que hemos compartido. En cada risa, cada abrazo,',
+      'cada tormenta que atravesamos de la mano.',
+      '',
+      'Eres mi aventura favorita. Para siempre.'
+    ];
+    lineas.forEach((linea, i) => {
+      ctx.fillText(linea, cX, ry + 70 + i * 22);
+    });
+
+    // Firma
+    ctx.font = 'italic 14px Playfair Display, serif';
+    ctx.fillStyle = '#f5d88a';
+    ctx.fillText('— Con amor infinito 💛', cX, ry + cH - 20);
+
+    ctx.textAlign = 'left';
+    ctx.restore();
+  }
+
+  _roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  onClic(x, y) {
+    const m = this.motor;
+    if (m.dialogos.activo && !m.dialogos.enPregunta) {
+      m.dialogos.avanzar();
+    }
+  }
+
+  onTecla(e) {
+    this.motor.dialogos.procesarTecla(e);
+  }
+}
+
+// ─────────────────────────────────────────
+//  MOTOR PRINCIPAL DEL JUEGO
+//  Inicializa y orquesta todos los sistemas
+// ─────────────────────────────────────────
+class Motor {
+  constructor() {
+    // Configurar canvas
+    this.canvas = document.getElementById('gameCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.canvas.width = CANVAS_W;
+    this.canvas.height = CANVAS_H;
+
+    // Sistemas globales
+    this.audio = new AudioManager();
+    this.particulas = new SistemaParticulas();
+    this.album = new AlbumRecuerdos();
+
+    // Gestor de diálogos (callback vacío por defecto)
+    this.dialogos = new GestorDialogos(this.audio, this.particulas, null);
+
+    // Jugador
+    this.jugador = new Jugador(100, CANVAS_H * 0.65);
+
+    // Gestor de escenas
+    this.sceneManager = new SceneManager();
+
+    // Registrar escenas
+    this.sceneManager.registrar('primera', new Scene_PrimeraCita(this));
+    this.sceneManager.registrar('desafio', new Scene_DesafioDiario(this));
+    this.sceneManager.registrar('final', new Scene_Final(this));
+
+    // Bucle de juego
+    this.ultimoTimestamp = 0;
+    this.corriendo = false;
+
+    // Configurar eventos
+    this._configurarEventos();
+  }
+
+  /** Configura todos los listeners de eventos del DOM y canvas */
+  _configurarEventos() {
+    // Clic en canvas
+    this.canvas.addEventListener('click', (e) => {
+      const rect = this.canvas.getBoundingClientRect();
+      const scaleX = CANVAS_W / rect.width;
+      const scaleY = CANVAS_H / rect.height;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      this.sceneManager.onClic(x, y);
+    });
+
+    // Teclado para preguntas del diálogo
+    document.addEventListener('keydown', (e) => {
+      this.sceneManager.onTecla(e);
+    });
+
+    // Botón del álbum
+    document.getElementById('album-btn').addEventListener('click', () => {
+      this.album.renderizarModal();
+      document.getElementById('album-modal').classList.add('visible');
+    });
+
+    document.getElementById('album-cerrar').addEventListener('click', () => {
+      document.getElementById('album-modal').classList.remove('visible');
+    });
+  }
+
+  /** Inicia el motor después del primer clic del usuario */
+  iniciar() {
+    // Inicializar audio (requiere gesto del usuario)
+    this.audio.inicializar();
+
+    // Mostrar canvas y ocultar pantalla de inicio
+    const inicio = document.getElementById('pantalla-inicio');
+    inicio.style.opacity = '0';
+    setTimeout(() => {
+      inicio.style.display = 'none';
+      document.getElementById('game-wrapper').style.display = 'block';
+      const instruccion = document.getElementById('instruccion');
+      instruccion.style.display = 'block';
+    }, 1200);
+
+    // Comenzar en la primera escena
+    this.sceneManager.irA('primera');
+
+    // Iniciar el bucle de juego
+    this.corriendo = true;
+    requestAnimationFrame((ts) => this._bucle(ts));
+  }
+
+  /** Bucle principal del juego (llamado por requestAnimationFrame) */
+  _bucle(timestamp) {
+    if (!this.corriendo) return;
+
+    // Actualizar lógica
+    this.sceneManager.actualizar();
+
+    // Limpiar canvas
+    this.ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+    // Dibujar escena actual
+    this.sceneManager.dibujar(this.ctx);
+
+    // Continuar el bucle
+    requestAnimationFrame((ts) => this._bucle(ts));
+  }
+}
+
+// ─────────────────────────────────────────
+//  PUNTO DE ENTRADA
+//  Inicializa el motor al hacer clic en "Comenzar"
+// ─────────────────────────────────────────
+let motorJuego = null;
+
+document.getElementById('btn-inicio').addEventListener('click', () => {
+  if (!motorJuego) {
+    motorJuego = new Motor();
+    motorJuego.iniciar();
+  }
+});
+
+// Hacer el canvas responsivo
+function ajustarCanvas() {
+  const wrapper = document.getElementById('game-wrapper');
+  const maxW = Math.min(window.innerWidth - 20, CANVAS_W);
+  const escala = maxW / CANVAS_W;
+  const canvas = document.getElementById('gameCanvas');
+  canvas.style.width = (CANVAS_W * escala) + 'px';
+  canvas.style.height = (CANVAS_H * escala) + 'px';
+}
+window.addEventListener('resize', ajustarCanvas);
+ajustarCanvas();
+</script>
+</body>
+</html>
